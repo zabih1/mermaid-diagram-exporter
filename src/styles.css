@@ -110,7 +110,6 @@ button:disabled {
 .icon-button,
 .ghost-button,
 .example-row button,
-.copy-button,
 .export-grid button {
   align-items: center;
   border: 1px solid var(--border);
@@ -128,7 +127,6 @@ button:disabled {
 .icon-button:hover,
 .ghost-button:hover,
 .example-row button:hover,
-.copy-button:hover,
 .export-grid button:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
@@ -335,7 +333,7 @@ textarea {
 .export-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .export-grid button {
@@ -349,13 +347,6 @@ textarea {
 
 .export-grid button:hover {
   background: var(--accent-strong);
-}
-
-.copy-button {
-  background: var(--surface-strong);
-  margin: 12px 0 18px;
-  min-height: 42px;
-  width: 100%;
 }
 
 .option-group {

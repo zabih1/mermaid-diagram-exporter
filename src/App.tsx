@@ -3,10 +3,8 @@ import mermaid from 'mermaid';
 import {
   AlertTriangle,
   Check,
-  Copy,
   Download,
   FileImage,
-  FileText,
   Maximize2,
   Moon,
   Play,
@@ -17,8 +15,8 @@ import {
 
 const starterDiagram = `flowchart LR
   A[Write Mermaid code] --> B{Render preview}
-  B -->|Looks good| C[Export SVG]
-  B -->|Need bitmap| D[Export PNG or JPG]
+  B -->|Need a file| C[Export PNG]
+  B -->|Need a photo format| D[Export JPG]
   C --> E[Use anywhere]
   D --> E`;
 
@@ -34,9 +32,9 @@ const examples = [
   participant App
   participant Mermaid
   User->>App: Enter diagram text
-  App->>Mermaid: Render SVG
+  App->>Mermaid: Render diagram
   Mermaid-->>App: Preview markup
-  App-->>User: Download SVG, PNG, or JPG`,
+  App-->>User: Download PNG or JPG`,
   },
   {
     label: 'Timeline',
@@ -44,12 +42,12 @@ const examples = [
   title Export workflow
   Draft : Write Mermaid syntax
   Preview : Validate and inspect
-  Save : Download as SVG
-  Share : Export as PNG or JPG`,
+  Save : Export as PNG
+  Share : Export as JPG`,
   },
 ];
 
-type ExportFormat = 'svg' | 'png' | 'jpg';
+type ExportFormat = 'png' | 'jpg';
 type ThemeMode = 'light' | 'dark';
 
 mermaid.initialize({
@@ -233,10 +231,7 @@ export default function App() {
 
     try {
       const baseName = fileSafeName(title);
-      const blob =
-        format === 'svg'
-          ? svgToBlob(renderedSvg)
-          : await svgToRasterBlob(renderedSvg, format, exportScale, background);
+      const blob = await svgToRasterBlob(renderedSvg, format, exportScale, background);
 
       downloadBlob(blob, `${baseName}.${format}`);
       setExportError('');
@@ -244,7 +239,7 @@ export default function App() {
     } catch (currentError) {
       const message =
         currentError instanceof DOMException && currentError.name === 'SecurityError'
-          ? 'Raster export failed. Try SVG or remove HTML labels from the diagram.'
+          ? 'Raster export failed. Remove HTML labels from the diagram and try again.'
           : currentError instanceof Error
             ? currentError.message
             : `Could not export ${format.toUpperCase()}.`;
@@ -256,19 +251,12 @@ export default function App() {
     }
   }
 
-  async function copySvg() {
-    if (!renderedSvg || error) return;
-    await navigator.clipboard.writeText(renderedSvg);
-    setExportError('');
-    setLastSaved('SVG copied');
-  }
-
   return (
     <main className="app-shell">
       <section className="top-bar" aria-label="Application controls">
         <div>
           <h1>Mermaid Diagram Exporter</h1>
-          <p>Draft, preview, and save Mermaid diagrams as SVG, PNG, or JPG.</p>
+          <p>Draft, preview, and save Mermaid diagrams as PNG or JPG.</p>
         </div>
 
         <div className="top-actions">
@@ -376,10 +364,6 @@ export default function App() {
           </div>
 
           <div className="export-grid">
-            <button type="button" onClick={() => exportDiagram('svg')} disabled={exportDisabled}>
-              <FileText size={18} />
-              SVG
-            </button>
             <button type="button" onClick={() => exportDiagram('png')} disabled={exportDisabled}>
               <FileImage size={18} />
               PNG
@@ -389,11 +373,6 @@ export default function App() {
               JPG
             </button>
           </div>
-
-          <button className="copy-button" type="button" onClick={copySvg} disabled={exportDisabled}>
-            <Copy size={17} />
-            Copy SVG code
-          </button>
 
           <div className="option-group">
             <label htmlFor="export-scale">Bitmap scale</label>
