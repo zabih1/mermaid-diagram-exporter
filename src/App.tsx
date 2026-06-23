@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import {
   AlertTriangle,
@@ -6,8 +6,10 @@ import {
   Download,
   FileImage,
   Maximize2,
+  Minus,
   Moon,
   Play,
+  Plus,
   RotateCcw,
   Sun,
   Wand2,
@@ -50,6 +52,10 @@ const examples = [
 type ExportFormat = 'png' | 'jpg';
 type ThemeMode = 'light' | 'dark';
 
+const MIN_DIAGRAM_ZOOM = 0.5;
+const MAX_DIAGRAM_ZOOM = 2;
+const DIAGRAM_ZOOM_STEP = 0.1;
+
 mermaid.initialize({
   startOnLoad: false,
   securityLevel: 'loose',
@@ -77,6 +83,10 @@ function fileSafeName(value: string) {
     .replace(/^-+|-+$/g, '');
 
   return normalized || 'mermaid-diagram';
+}
+
+function clampDiagramZoom(value: number) {
+  return Number(Math.min(MAX_DIAGRAM_ZOOM, Math.max(MIN_DIAGRAM_ZOOM, value)).toFixed(2));
 }
 
 function svgToBlob(svg: string) {
@@ -173,6 +183,7 @@ export default function App() {
   const [lastSaved, setLastSaved] = useState('');
   const [exportError, setExportError] = useState('');
   const [exportingFormat, setExportingFormat] = useState<ExportFormat | ''>('');
+  const [diagramZoom, setDiagramZoom] = useState(1);
   const [expanded, setExpanded] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -182,6 +193,8 @@ export default function App() {
     return { lines, chars };
   }, [code]);
   const exportDisabled = !renderedSvg || !!error || !!exportingFormat;
+  const zoomPercent = Math.round(diagramZoom * 100);
+  const diagramFrameStyle = { '--diagram-zoom': diagramZoom } as CSSProperties;
 
   useEffect(() => {
     let cancelled = false;
@@ -221,6 +234,10 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = themeMode;
   }, [themeMode]);
+
+  function updateDiagramZoom(direction: -1 | 1) {
+    setDiagramZoom((currentZoom) => clampDiagramZoom(currentZoom + direction * DIAGRAM_ZOOM_STEP));
+  }
 
   async function exportDiagram(format: ExportFormat) {
     if (!renderedSvg || error) return;
@@ -340,9 +357,36 @@ export default function App() {
               <span className="eyebrow">Preview</span>
               <h2>Rendered Diagram</h2>
             </div>
-            <div className={`status-pill ${error ? 'error' : 'ready'}`}>
-              {error ? <AlertTriangle size={15} /> : isRendering ? <Play size={15} /> : <Check size={15} />}
-              {error ? 'Needs fix' : isRendering ? 'Rendering' : 'Ready'}
+            <div className="preview-tools">
+              <div className="zoom-controls" aria-label="Diagram zoom controls">
+                <button
+                  className="zoom-button"
+                  type="button"
+                  aria-label="Zoom out"
+                  title="Zoom out"
+                  onClick={() => updateDiagramZoom(-1)}
+                  disabled={diagramZoom <= MIN_DIAGRAM_ZOOM}
+                >
+                  <Minus size={15} />
+                </button>
+                <span className="zoom-value" aria-live="polite">
+                  {zoomPercent}%
+                </span>
+                <button
+                  className="zoom-button"
+                  type="button"
+                  aria-label="Zoom in"
+                  title="Zoom in"
+                  onClick={() => updateDiagramZoom(1)}
+                  disabled={diagramZoom >= MAX_DIAGRAM_ZOOM}
+                >
+                  <Plus size={15} />
+                </button>
+              </div>
+              <div className={`status-pill ${error ? 'error' : 'ready'}`}>
+                {error ? <AlertTriangle size={15} /> : isRendering ? <Play size={15} /> : <Check size={15} />}
+                {error ? 'Needs fix' : isRendering ? 'Rendering' : 'Ready'}
+              </div>
             </div>
           </div>
 
@@ -350,7 +394,7 @@ export default function App() {
             {error ? (
               <pre className="error-box">{error}</pre>
             ) : (
-              <div className="diagram-frame" dangerouslySetInnerHTML={{ __html: renderedSvg }} />
+              <div className="diagram-frame" style={diagramFrameStyle} dangerouslySetInnerHTML={{ __html: renderedSvg }} />
             )}
           </div>
         </section>

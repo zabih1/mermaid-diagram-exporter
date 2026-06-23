@@ -110,6 +110,7 @@ button:disabled {
 .icon-button,
 .ghost-button,
 .example-row button,
+.zoom-button,
 .export-grid button {
   align-items: center;
   border: 1px solid var(--border);
@@ -127,6 +128,7 @@ button:disabled {
 .icon-button:hover,
 .ghost-button:hover,
 .example-row button:hover,
+.zoom-button:hover,
 .export-grid button:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
@@ -286,6 +288,47 @@ textarea {
   color: var(--danger);
 }
 
+.preview-tools {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.zoom-controls {
+  align-items: center;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: 32px minmax(52px, auto) 32px;
+  min-height: 32px;
+  overflow: hidden;
+}
+
+.zoom-button {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  height: 32px;
+  padding: 0;
+  width: 32px;
+}
+
+.zoom-button:hover {
+  background: var(--accent-soft);
+  transform: none;
+}
+
+.zoom-value {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  min-width: 52px;
+  text-align: center;
+}
+
 .preview-surface {
   align-items: center;
   background:
@@ -303,18 +346,27 @@ textarea {
 }
 
 .diagram-frame {
+  --diagram-zoom: 1;
   background: #ffffff;
   border: 1px solid #dce3ef;
   border-radius: 8px;
   max-width: 100%;
   min-width: min(100%, 320px);
   padding: 22px;
+  zoom: var(--diagram-zoom);
 }
 
 .diagram-frame svg {
   display: block;
   height: auto;
   max-width: min(100%, 980px);
+}
+
+@supports not (zoom: 1) {
+  .diagram-frame {
+    transform: scale(var(--diagram-zoom));
+    transform-origin: center top;
+  }
 }
 
 .error-box {
